@@ -15,17 +15,22 @@ The **Enterprise n8n Mesh** decouples execution into a distributed producer-cons
        ▼  Enqueues task (BullMQ job)
 [ Redis 7 Cluster / Single-Node with AOF ]
        │
-       ▼  Pulls next available task (Atomic BRPOPLPUSH)
-[ n8n-worker Fleet (Node 1..N) ]
-       │
-       ▼  Writes execution trace & logs
-[ PostgreSQL 16 (ACID Relational Storage) ]
+       ├─────────────────────────────────┐
+       ▼ (Always On)                     ▼ (Dynamic Surge Scaler)
+[ n8n-worker (Base Fleet) ]        [ n8n-worker-boost (Surge Fleet) ]
+  Concurrency: 10                    Concurrency: +10
+       │                                 │
+       └────────────────┬────────────────┘
+                        ▼  Writes execution trace & logs
+          [ PostgreSQL 16 (ACID Relational Storage) ]
 ```
 
-### Queue Characteristics
+### Queue Characteristics & Auto-Boosting
 - **Queue Engine**: BullMQ 5.x on top of Redis 7.
 - **Job Retention**: Completed jobs are purged or archived according to `EXECUTIONS_DATA_PRUNE=true` with a 7-day retention window (`EXECUTIONS_DATA_MAX_AGE=168`).
-- **Worker Concurrency**: Set to 10 concurrent jobs per worker container via `N8N_WORKERS_CONCURRENCY=10`.
+- **Dynamic Fleet Scaling**: `scripts/n8n_autobooster.py` monitors `bull:jobs:wait` and `bull:jobs:active`.
+  - When `wait >= 5` or `active >= 8`, spawns `n8n-worker-boost` (+10 concurrency).
+  - When idle for 3 evaluation cycles, terminates `n8n-worker-boost` and frees 1.0 GB RAM.
 
 ---
 

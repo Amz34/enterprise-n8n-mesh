@@ -12,6 +12,9 @@ services:
       - WEBHOOK_URL=${WEBHOOK_URL:-https://your-domain.com/}
       - NODE_ENV=production
       - N8N_METRICS=true
+      - N8N_METRICS_PREFIX=n8n_
+      - NODE_OPTIONS=--max-old-space-size=1536
+      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       # Database Configuration (PostgreSQL 16)
@@ -36,6 +39,11 @@ services:
       - n8n_data:/home/node/.n8n
     networks:
       - enterprise-mesh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
 
   n8n-worker:
     image: docker.n8n.io/n8nio/n8n:latest
@@ -45,6 +53,7 @@ services:
     environment:
       - NODE_ENV=production
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - NODE_OPTIONS=--max-old-space-size=1536
       # Database Configuration
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=${DB_POSTGRESDB_HOST:-postgres}
@@ -63,6 +72,45 @@ services:
       - n8n_data:/home/node/.n8n
     networks:
       - enterprise-mesh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  # Auto-Boost Secondary Worker Fleet (Dynamically spawned by n8n_autobooster.py during queue surges)
+  n8n-worker-boost:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-worker-boost
+    restart: "no"
+    command: worker
+    environment:
+      - NODE_ENV=production
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - NODE_OPTIONS=--max-old-space-size=1536
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${DB_POSTGRESDB_HOST:-postgres}
+      - DB_POSTGRESDB_PORT=${DB_POSTGRESDB_PORT:-5432}
+      - DB_POSTGRESDB_DATABASE=${DB_POSTGRESDB_DATABASE:-n8n_enterprise}
+      - DB_POSTGRESDB_USER=${DB_POSTGRESDB_USER:-agent_admin}
+      - DB_POSTGRESDB_PASSWORD=${DB_POSTGRESDB_PASSWORD}
+      - DB_POSTGRESDB_SCHEMA=public
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=${QUEUE_BULL_REDIS_HOST:-redis}
+      - QUEUE_BULL_REDIS_PORT=${QUEUE_BULL_REDIS_PORT:-6379}
+      - QUEUE_BULL_REDIS_PASSWORD=${QUEUE_BULL_REDIS_PASSWORD}
+      - N8N_WORKERS_CONCURRENCY=10
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - enterprise-mesh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    profiles:
+      - boost
 
 volumes:
   n8n_data:
