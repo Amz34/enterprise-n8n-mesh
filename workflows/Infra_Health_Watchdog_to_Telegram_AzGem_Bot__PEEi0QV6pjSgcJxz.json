@@ -1,0 +1,123 @@
+{
+  "updatedAt": "2026-11-05T14:06:11.197Z",
+  "createdAt": "2026-11-05T14:06:11.197Z",
+  "id": "PEEi0QV6pjSgcJxz",
+  "name": "Infra Health Watchdog to Telegram AzGem_Bot",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Every 6 Hours Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:5678/healthz",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Check n8n Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "",
+        "text": "=🟢 *Infra Sentinel Alert*\nn8n automation & internal stack is fully operational on Oracle ARM64 host.\nStatus: {{ $json.status }}\nTimestamp: {{ $now.toISO() }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "3",
+      "name": "Send to AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        650,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours Schedule": {
+      "main": [
+        [
+          {
+            "node": "Check n8n Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check n8n Health": {
+      "main": [
+        [
+          {
+            "node": "Send to AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "97aeb3d3-3023-40e8-96aa-097817fe5608",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-11-27T00:18:45.526Z",
+      "createdAt": "2026-11-27T00:18:45.526Z",
+      "role": "workflow:owner",
+      "workflowId": "PEEi0QV6pjSgcJxz",
+      "projectId": "tLOuyM69uiCbf8RD",
+      "project": {
+        "updatedAt": "2026-11-27T00:13:52.763Z",
+        "createdAt": "2026-11-27T00:13:52.763Z",
+        "id": "tLOuyM69uiCbf8RD",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "feaca950-8715-46df-9353-30f66eda744d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

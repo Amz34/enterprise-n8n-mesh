@@ -1,0 +1,75 @@
+{
+  "name": "EspoCRM Lead Ingestion & Telegram Notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-ingest",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Incoming Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "lead-ingest-hook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://stack-crm/api/v1/Lead",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"firstName\": \"{{ $json.body.firstName }}\",\n  \"lastName\": \"{{ $json.body.lastName }}\",\n  \"emailAddress\": \"{{ $json.body.email }}\",\n  \"description\": \"{{ $json.body.notes || 'Ingested via n8n automated bridge' }}\"\n}",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Create Lead in EspoCRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "",
+        "text": "=🎯 *New Lead Ingested into EspoCRM*\n*Name*: {{ $('Incoming Lead Webhook').item.json.body.firstName }} {{ $('Incoming Lead Webhook').item.json.body.lastName }}\n*Email*: {{ $('Incoming Lead Webhook').item.json.body.email }}\n*Lead ID*: {{ $json.id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "3",
+      "name": "Notify @AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [700, 300]
+    }
+  ],
+  "connections": {
+    "Incoming Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create Lead in EspoCRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead in EspoCRM": {
+      "main": [
+        [
+          {
+            "node": "Notify @AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

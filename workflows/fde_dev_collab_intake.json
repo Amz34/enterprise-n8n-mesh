@@ -1,0 +1,130 @@
+{
+  "name": "FDE Developer & Partner Collaboration Intake (Crash-Proof)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fde-collab",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-fde-lead-01",
+      "name": "Webhook: FDE Lead Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "wh-fde-lead-prod-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.first().json;\nconst body = item.body || item;\n\nconst email = String(body.email || body['Corporate / Developer Email'] || '').trim().toLowerCase();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!email || !emailRegex.test(email)) {\n  throw new Error('Validation Failed: Invalid developer/work email address: ' + email);\n}\n\nconst name = String(body.name || body['Your Name / Organization'] || 'Engineer').trim();\nconst projectName = String(body.projectName || body['Project Name'] || 'AI Architecture Project').trim();\nconst githubUrl = String(body.githubUrl || body['GitHub Profile or Project Repository URL'] || '').trim();\nconst category = String(body.category || body['Collaboration Category'] || 'Enterprise AI Deployment').trim();\nconst scope = String(body.scope || body['Technical Challenges & Deployment Scope'] || '').trim();\nconst submissionId = 'FDE-' + Date.now().toString().slice(-6);\n\nconst telegram_msg = '\ud83c\udfaf *New FDE Collaboration Intake Captured!*\\n\\n' +\n  '\ud83d\udc64 *Submitter:* ' + name + '\\n' +\n  '\ud83d\udce7 *Email:* `' + email + '`\\n' +\n  '\ud83d\udcbc *Category:* ' + category + '\\n' +\n  '\ud83d\ude80 *Project:* ' + projectName + '\\n' +\n  '\ud83d\udd17 *GitHub:* ' + (githubUrl || 'Confidential / Under NDA') + '\\n\\n' +\n  '\ud83d\udcdd *Scope:* ' + scope.slice(0, 250) + '\\n\\n' +\n  '\u26a1 *Receipt:* ' + submissionId + ' | 24h SLA Dispatched';\n\nreturn [{\n  json: {\n    submissionId,\n    name,\n    email,\n    projectName,\n    githubUrl,\n    category,\n    scope,\n    telegram_msg,\n    received_at: new Date().toISOString()\n  }\n}];\n"
+      },
+      "id": "code-validate-02",
+      "name": "Sanitize & Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8843884232",
+        "text": "={{ $json.telegram_msg }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "tg-notify-03",
+      "name": "Push Alert @AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "9YItpAhgucvUK8zd",
+          "name": "Telegram AzGem_Bot Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"submissionId\": \"{{ $json.submissionId }}\",\n  \"message\": \"Submission confirmed. Architectural brief logged into AZ Senior FDE queue with 24h SLA.\",\n  \"github_eval_harness\": \"https://github.com/Amz34/awesome-agent-infrastructure\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "resp-webhook-04",
+      "name": "Render Success Screen",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: FDE Lead Intake": {
+      "main": [
+        [
+          {
+            "node": "Sanitize & Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize & Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Push Alert @AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Alert @AzGem_Bot": {
+      "main": [
+        [
+          {
+            "node": "Render Success Screen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

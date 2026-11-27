@@ -1,0 +1,116 @@
+{
+  "updatedAt": "2026-11-27T00:19:16.004Z",
+  "createdAt": "2026-11-27T00:19:16.004Z",
+  "id": "2IKpUyDBE9UCrCkQ",
+  "name": "Global Error & Incident Governance Mesh",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "err-trig-01",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst exec = item.execution || {};\nconst wf = item.workflow || {};\nconst err = exec.error || {};\n\nconst execId = exec.id || 'N/A';\nconst wfName = wf.name || 'Unknown Workflow';\nconst wfId = wf.id || 'N/A';\nconst lastNode = exec.lastNodeExecuted || err.node || 'Unknown Node';\nconst errMsg = String(err.message || 'Execution halted unexpectedly').slice(0, 300);\nconst nowIso = new Date().toISOString();\nconst execUrl = `http://100.110.242.47:5678/execution/${execId}`;\n\nconst tgText = `🚨 <b>n8n Enterprise Workflow Incident</b>\n` +\n  `🕒 <code>${nowIso}</code>\n\n` +\n  `• <b>Workflow:</b> <code>${wfName}</code>\n` +\n  `• <b>Failed Node:</b> <code>${lastNode}</code>\n` +\n  `• <b>Error:</b> <code>${errMsg}</code>\n` +\n  `• <b>Execution:</b> <a href=\"${execUrl}\">#${execId} (Review Run)</a>`;\n\nreturn [{\n  json: {\n    execId,\n    wfName,\n    wfId,\n    lastNode,\n    errMsg,\n    timestamp: nowIso,\n    execUrl,\n    telegram_message: tgText,\n    chat_id: '8843884232'\n  }\n}];"
+      },
+      "id": "fmt-err-02",
+      "name": "Sanitize & Format Incident",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8863955799:AAFsGutWzA2WK80b8KyzGLVCQc2IN4MTkgE/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $json.chat_id }}\",\n  \"text\": \"{{ $json.telegram_message }}\",\n  \"parse_mode\": \"HTML\",\n  \"disable_web_page_preview\": true\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "tg-alert-03",
+      "name": "Push Alert @AzGem_Bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sanitize & Format Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize & Format Incident": {
+      "main": [
+        [
+          {
+            "node": "Push Alert @AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "380c9524-c323-4039-8ff3-fecbf5a51ce4",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-11-27T00:19:16.004Z",
+      "createdAt": "2026-11-27T00:19:16.004Z",
+      "role": "workflow:owner",
+      "workflowId": "2IKpUyDBE9UCrCkQ",
+      "projectId": "tLOuyM69uiCbf8RD",
+      "project": {
+        "updatedAt": "2026-11-27T00:13:52.763Z",
+        "createdAt": "2026-11-27T00:13:52.763Z",
+        "id": "tLOuyM69uiCbf8RD",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "feaca950-8715-46df-9353-30f66eda744d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

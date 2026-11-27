@@ -1,0 +1,68 @@
+{
+  "name": "AZ Sentinel — n8n Execution Monitor (10m Schedule -> @AzGem_Bot)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 10 }]
+        }
+      },
+      "id": "sched-10m",
+      "name": "Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.N8N_INTERNAL_URL || 'http://127.0.0.1:5678' }}/api/v1/executions?status=error&limit=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{ $env.N8N_API_KEY }}" }
+          ]
+        },
+        "options": { "timeout": 10000 }
+      },
+      "id": "fetch-execs",
+      "name": "Get Failed Executions (n8n API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.first().json.data || [];\nconst cutoff = Date.now() - 15 * 60 * 1000;\nconst recent = rows.filter(e => new Date(e.startedAt).getTime() >= cutoff);\nif (!recent.length) return [];\nconst summary = recent.map(e => `• WF ${e.workflowId} | Exec #${e.id} | Status: ${e.status}`).join('\\n');\nreturn [{ json: { count: recent.length, message: `🚨 n8n Execution Alert (${recent.length} recent failure(s)):\\n${summary}` } }];"
+      },
+      "id": "filter-recent",
+      "name": "Filter Recent Failures (<15m)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.AZGEM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $env.AZGEM_CHAT_ID }}" },
+            { "name": "text", "value": "={{ $json.message }}" }
+          ]
+        }
+      },
+      "id": "notify-tg",
+      "name": "Notify @AzGem_Bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 300]
+    }
+  ],
+  "connections": {
+    "Every 10 Minutes": { "main": [[{ "node": "Get Failed Executions (n8n API)", "type": "main", "index": 0 }]] },
+    "Get Failed Executions (n8n API)": { "main": [[{ "node": "Filter Recent Failures (<15m)", "type": "main", "index": 0 }]] },
+    "Filter Recent Failures (<15m)": { "main": [[{ "node": "Notify @AzGem_Bot", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

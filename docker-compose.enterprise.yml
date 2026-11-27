@@ -1,0 +1,72 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-automation
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-127.0.0.1}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=${WEBHOOK_URL:-https://your-domain.com/}
+      - NODE_ENV=production
+      - N8N_METRICS=true
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      # Database Configuration (PostgreSQL 16)
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${DB_POSTGRESDB_HOST:-postgres}
+      - DB_POSTGRESDB_PORT=${DB_POSTGRESDB_PORT:-5432}
+      - DB_POSTGRESDB_DATABASE=${DB_POSTGRESDB_DATABASE:-n8n_enterprise}
+      - DB_POSTGRESDB_USER=${DB_POSTGRESDB_USER:-agent_admin}
+      - DB_POSTGRESDB_PASSWORD=${DB_POSTGRESDB_PASSWORD}
+      - DB_POSTGRESDB_SCHEMA=public
+      # Distributed Queue Mode (Redis BullMQ)
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=${QUEUE_BULL_REDIS_HOST:-redis}
+      - QUEUE_BULL_REDIS_PORT=${QUEUE_BULL_REDIS_PORT:-6379}
+      - QUEUE_BULL_REDIS_PASSWORD=${QUEUE_BULL_REDIS_PASSWORD}
+      # Data Retention & Health
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168
+      - EXECUTIONS_DATA_PRUNE_MAX_COUNT=50000
+      - N8N_DEFAULT_ERROR_WORKFLOW_ID=${N8N_DEFAULT_ERROR_WORKFLOW_ID:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - enterprise-mesh-network
+
+  n8n-worker:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      - NODE_ENV=production
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      # Database Configuration
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${DB_POSTGRESDB_HOST:-postgres}
+      - DB_POSTGRESDB_PORT=${DB_POSTGRESDB_PORT:-5432}
+      - DB_POSTGRESDB_DATABASE=${DB_POSTGRESDB_DATABASE:-n8n_enterprise}
+      - DB_POSTGRESDB_USER=${DB_POSTGRESDB_USER:-agent_admin}
+      - DB_POSTGRESDB_PASSWORD=${DB_POSTGRESDB_PASSWORD}
+      - DB_POSTGRESDB_SCHEMA=public
+      # Distributed Queue Mode
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=${QUEUE_BULL_REDIS_HOST:-redis}
+      - QUEUE_BULL_REDIS_PORT=${QUEUE_BULL_REDIS_PORT:-6379}
+      - QUEUE_BULL_REDIS_PASSWORD=${QUEUE_BULL_REDIS_PASSWORD}
+      - N8N_WORKERS_CONCURRENCY=10
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - enterprise-mesh-network
+
+volumes:
+  n8n_data:
+
+networks:
+  enterprise-mesh-network:
+    driver: bridge

@@ -1,0 +1,192 @@
+{
+  "name": "Apify Enterprise Actor & Dataset Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "apify-scraper",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-apify-01",
+      "name": "Webhook: Inbound Apify Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "apify-scraper-wh-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\n\nconst actorId = String(body.actorId || 'apify~web-scraper').trim();\nconst actorInput = body.input || {\n  startUrls: [{ url: body.url || 'https://news.ycombinator.com' }],\n  maxItems: body.maxItems || 5\n};\nconst waitForFinish = Math.min(Number(body.waitForFinish) || 60, 120);\nconst apifyToken = String(body.token || $env.APIFY_TOKEN || '').trim();\n\nif (!apifyToken) {\n  return [{\n    json: {\n      error: 'Missing Apify API Token. Provide in payload or configure APIFY_TOKEN.',\n      success: false\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    actorId,\n    actorInput,\n    waitForFinish,\n    apifyToken,\n    endpoint: `https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/runs?waitForFinish=${waitForFinish}`,\n    success: true\n  }\n}];"
+      },
+      "id": "code-apify-02",
+      "name": "Sanitize & Build Actor Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-valid-03",
+      "name": "Is Config Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.apifyToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.actorInput) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-apify-act-04",
+      "name": "Execute Apify Actor Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 220]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.apify.com/v2/datasets/{{ $json.data.defaultDatasetId }}/items?format=json&clean=true&limit=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Sanitize & Build Actor Request').first().json.apifyToken }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "http-fetch-ds-05",
+      "name": "Fetch Clean Dataset",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 220]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"actorId\": \"{{ $('Sanitize & Build Actor Request').first().json.actorId }}\",\n  \"runId\": \"{{ $('Execute Apify Actor Run').first().json.data.id }}\",\n  \"status\": \"{{ $('Execute Apify Actor Run').first().json.data.status }}\",\n  \"itemsCount\": {{ $input.all().length }},\n  \"data\": {{ JSON.stringify($input.all().map(i => i.json)) }}\n}",
+        "options": {}
+      },
+      "id": "resp-success-06",
+      "name": "Respond Webhook: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1340, 220]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.error || 'Invalid Apify execution parameters' }}\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "resp-fail-07",
+      "name": "Respond Webhook: Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 420]
+    }
+  ],
+  "connections": {
+    "Webhook: Inbound Apify Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sanitize & Build Actor Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize & Build Actor Request": {
+      "main": [
+        [
+          {
+            "node": "Is Config Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Config Valid?": {
+      "main": [
+        [
+          {
+            "node": "Execute Apify Actor Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Webhook: Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Apify Actor Run": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clean Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Clean Dataset": {
+      "main": [
+        [
+          {
+            "node": "Respond Webhook: Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

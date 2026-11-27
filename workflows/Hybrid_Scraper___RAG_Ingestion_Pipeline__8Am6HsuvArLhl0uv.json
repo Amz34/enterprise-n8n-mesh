@@ -1,0 +1,149 @@
+{
+  "updatedAt": "2026-11-08T04:46:24.054Z",
+  "createdAt": "2026-11-08T04:46:24.054Z",
+  "id": "8Am6HsuvArLhl0uv",
+  "name": "Hybrid Scraper & RAG Ingestion Pipeline",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-scrape",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.110.242.47:8777/scrape",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.body.url }}"
+            },
+            {
+              "name": "engine",
+              "value": "={{ $json.body.engine || 'auto' }}"
+            },
+            {
+              "name": "css_selector",
+              "value": "={{ $json.body.css_selector || 'title::text' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2",
+      "name": "Hybrid Scraper HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8989/",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "rag_add"
+            },
+            {
+              "name": "topic",
+              "value": "={{ $json.url }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.extracted || $json.title }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "Index to Local Vector RAG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Hybrid Scraper HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hybrid Scraper HTTP": {
+      "main": [
+        [
+          {
+            "node": "Index to Local Vector RAG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "80b7bb5c-c359-45aa-8fd5-51f9ba34b62f",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-11-27T00:18:45.526Z",
+      "createdAt": "2026-11-27T00:18:45.526Z",
+      "role": "workflow:owner",
+      "workflowId": "8Am6HsuvArLhl0uv",
+      "projectId": "tLOuyM69uiCbf8RD",
+      "project": {
+        "updatedAt": "2026-11-27T00:13:52.763Z",
+        "createdAt": "2026-11-27T00:13:52.763Z",
+        "id": "tLOuyM69uiCbf8RD",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "feaca950-8715-46df-9353-30f66eda744d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

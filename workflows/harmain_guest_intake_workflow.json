@@ -1,0 +1,108 @@
+{
+  "name": "Harmain Guest Intake & Islamic Qualification Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "haramain-guest-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-harmain-lead-01",
+      "name": "Webhook: Form Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "wh-harmain-lead-prod-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.first().json;\nconst body = item.body || item;\n\nlet rawPhone = String(body.phone || body.mobile || '').trim();\nlet cleanPhone = rawPhone.replace(/\\D/g, '');\nif (cleanPhone.startsWith('05') && cleanPhone.length === 10) {\n  cleanPhone = '966' + cleanPhone.slice(1);\n}\n\nif (cleanPhone.length < 8) {\n  throw new Error('Validation Failed: Invalid phone number ' + rawPhone);\n}\n\nconst guestName = String(body.full_name || body.name || 'Honored Guest').trim();\nconst country = String(body.country || 'Global').trim();\nconst arrivalDate = String(body.arrival_date || '').trim();\nconst departureDate = String(body.departure_date || '').trim();\nconst partySummary = String(body.guest_count || body.party_type || '2 Guests').trim();\n\nreturn [{\n  json: {\n    cleanPhone,\n    chatId: cleanPhone + '@s.whatsapp.net',\n    guestName,\n    country,\n    arrivalDate,\n    departureDate,\n    partySummary,\n    rawPayload: body,\n    receivedAt: new Date().toISOString()\n  }\n}];\n"
+      },
+      "id": "code-validate-02",
+      "name": "Normalize E.164 & Sanitize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/harmain/register-guest",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $json.cleanPhone }}\",\n  \"full_name\": \"{{ $json.guestName }}\",\n  \"country\": \"{{ $json.country }}\",\n  \"arrival_date\": \"{{ $json.arrivalDate }}\",\n  \"departure_date\": \"{{ $json.departureDate }}\",\n  \"guest_count\": \"{{ $json.partySummary }}\",\n  \"raw\": {{ JSON.stringify($json.rawPayload) }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-register-whitelist-03",
+      "name": "Register Guest in PostgreSQL Whitelist",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"guest\": \"{{ $json.guestName }}\",\n  \"phone\": \"+{{ $json.cleanPhone }}\",\n  \"message\": \"Alhamdulillah, guest intake confirmed. Warm Islamic onboarding scheduled with 45s human pacing.\"\n}",
+        "options": {}
+      },
+      "id": "resp-confirm-04",
+      "name": "Return Form Receipt (200 OK)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        860,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Form Intake": {
+      "main": [
+        [
+          {
+            "node": "Normalize E.164 & Sanitize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize E.164 & Sanitize": {
+      "main": [
+        [
+          {
+            "node": "Register Guest in PostgreSQL Whitelist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register Guest in PostgreSQL Whitelist": {
+      "main": [
+        [
+          {
+            "node": "Return Form Receipt (200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

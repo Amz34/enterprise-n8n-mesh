@@ -1,0 +1,198 @@
+{
+  "updatedAt": "2026-11-25T14:50:00.000Z",
+  "createdAt": "2026-11-25T14:19:36.923Z",
+  "id": "TaD3F1EuPapcJBlc",
+  "name": "Developer Requisition Talent Intake (Crash-Proof)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dev-requisition",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-dev-talent-01",
+      "name": "Webhook: Dev Talent Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "wh-dev-talent-prod-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.first().json;\nconst body = item.body || item;\n\nconst email = String(body.email || '').trim().toLowerCase();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!email || !emailRegex.test(email)) {\n  throw new Error('Validation Failed: Invalid candidate email address: ' + email);\n}\n\nconst name = String(body.name || 'Engineer').trim();\nconst firstName = name.split(' ')[0] || 'Engineer';\nconst category = String(body.category || 'Full-Stack Software Engineering').trim();\nconst organization = String(body.organization || 'Independent Builder').trim();\nconst githubUrl = String(body.githubUrl || 'https://github.com/Amz34').trim();\nconst portfolioUrl = String(body.portfolioUrl || 'None').trim();\nconst scope = String(body.scope || 'General development stack').trim();\nconst submissionId = 'REQ-' + Date.now().toString().slice(-6);\nconst received_at = new Date().toISOString();\n\nconst telegram_msg = '⚡ *New Engineering Candidate Profile Captured!*\\n\\n' +\n  '👤 *Engineer:* ' + name + '\\n' +\n  '📧 *Email:* `' + email + '`\\n' +\n  '🎯 *Domain:* ' + category + '\\n' +\n  '🔗 *GitHub:* ' + githubUrl + '\\n' +\n  '🌐 *Portfolio:* ' + portfolioUrl + '\\n\\n' +\n  '🛠️ *Stack & Scope:*\\n' + scope.slice(0, 260) + '\\n\\n' +\n  '⚡ *Reference:* `' + submissionId + '` | Priority Review Track';\n\nconst sigHtml = `<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse; font-size:11px; font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height:16px;\">\n      <tbody>\n        <tr>\n          <td style=\"border-collapse:collapse; padding:15px; border-radius:8px; border:1px solid rgb(226,226,226); background-color:#ffffff;\">\n            <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n              <tbody>\n                <tr>\n                  <td align=\"center\" valign=\"middle\" style=\"border-collapse:separate; border-radius:6px; border:1px solid rgb(226,226,226); padding:8px 6px; background-color:#fafafa;\">\n                    <table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n                      <tbody>\n                        <tr>\n                          <td style=\"padding:2px 0px;\">\n                            <a href=\"https://amz34.github.io\" target=\"_blank\" rel=\"noreferrer\" title=\"Website / Portfolio\">\n                              <img alt=\"Website\" src=\"https://res.cloudinary.com/ptfjf0cj/image/upload/v1794073493/logo_transparent.gif\" width=\"30\" height=\"30\" style=\"display:block; border:0px;\">\n                            </a>\n                          </td>\n                        </tr>\n                        <tr>\n                          <td style=\"padding:2px 0px;\">\n                            <a href=\"https://linkedin.com/in/aamirzameer\" target=\"_blank\" rel=\"noreferrer\" title=\"LinkedIn\">\n                              <img alt=\"LinkedIn\" src=\"https://res.cloudinary.com/ptfjf0cj/image/upload/v1794073493/linkedin_transparent.gif\" width=\"30\" height=\"30\" style=\"display:block; border:0px;\">\n                            </a>\n                          </td>\n                        </tr>\n                        <tr>\n                          <td style=\"padding:2px 0px;\">\n                            <a href=\"https://github.com/Amz34\" target=\"_blank\" rel=\"noreferrer\" title=\"GitHub\">\n                              <img alt=\"GitHub\" src=\"https://res.cloudinary.com/ptfjf0cj/image/upload/v1794073492/github_transparent.gif\" width=\"30\" height=\"30\" style=\"display:block; border:0px;\">\n                            </a>\n                          </td>\n                        </tr>\n                      </tbody>\n                    </table>\n                  </td>\n                  <td style=\"padding:0 12px; font-size:12px; color:rgb(226,226,226);\" valign=\"middle\">•</td>\n                  <td style=\"border-collapse:collapse; padding:0px; vertical-align:middle;\">\n                    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n                      <tbody>\n                        <tr>\n                          <td style=\"padding:0px;\">\n                            <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n                              <tbody>\n                                <tr>\n                                  <td style=\"font-size:14px; font-weight:700; color:#0f172a; letter-spacing:-0.2px;\">\n                                    Aamir Malik Zameer\n                                    <span style=\"display:inline-block; margin-left:4px; vertical-align:middle;\">\n                                      <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n                                        <path d=\"M12 2L14.4 4.8L18.1 4.5L19.2 8.1L22.6 9.8L21.8 13.5L23.7 16.8L20.4 18.7L19.5 22.4L15.8 22.3L13.6 25.3L10.4 23.3L7.4 25.3L5.2 22.3L1.5 22.4L0.6 18.7L-2.7 16.8L-1.8 13.5L-2.6 9.8L0.8 8.1L1.9 4.5L5.6 4.8L8 2L12 2Z\" fill=\"#0284c7\" transform=\"scale(0.85) translate(2, 0)\"/>\n                                        <path d=\"M9 12L11 14L15 10\" stroke=\"#ffffff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n                                      </svg>\n                                    </span>\n                                  </td>\n                                </tr>\n                                <tr>\n                                  <td style=\"font-size:11px; color:#475569; padding-top:2px;\">\n                                    Lead Solutions & Full-Stack Architect • AZ Engineering\n                                  </td>\n                                </tr>\n                              </tbody>\n                            </table>\n                          </td>\n                        </tr>\n                        <tr><td height=\"8\" style=\"font-size:1px; line-height:8px;\">&nbsp;</td></tr>\n                        <tr>\n                          <td>\n                            <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"font-size:11px; color:#334155;\">\n                              <tbody>\n                                <tr>\n                                  <td style=\"font-weight:600; color:#64748b; padding-right:6px;\">Direct:</td>\n                                  <td><a href=\"tel:+966574268856\" style=\"color:#0284c7; text-decoration:none;\">+966 57 426 8856</a></td>\n                                </tr>\n                                <tr>\n                                  <td style=\"font-weight:600; color:#64748b; padding-right:6px;\">Email:</td>\n                                  <td><a href=\"mailto:azengineeringapp@gmail.com\" style=\"color:#0284c7; text-decoration:none;\">azengineeringapp@gmail.com</a></td>\n                                </tr>\n                                <tr>\n                                  <td style=\"font-weight:600; color:#64748b; padding-right:6px;\">GitHub:</td>\n                                  <td><a href=\"https://github.com/Amz34\" target=\"_blank\" style=\"color:#0284c7; text-decoration:none;\">github.com/Amz34</a></td>\n                                </tr>\n                              </tbody>\n                            </table>\n                          </td>\n                        </tr>\n                      </tbody>\n                    </table>\n                  </td>\n                  <td style=\"padding:0 12px; font-size:12px; color:rgb(226,226,226);\" valign=\"middle\">•</td>\n                  <td valign=\"middle\" align=\"center\" style=\"padding-left:4px;\">\n                    <a href=\"https://amz34.github.io\" target=\"_blank\" rel=\"noreferrer\">\n                      <img src=\"https://amz34.github.io/assets/signature/aamir_profile_animated.gif\" alt=\"Aamir Malik Zameer\" width=\"75\" height=\"75\" style=\"display:block; border-radius:50%; border:2px solid #0284c7;\">\n                    </a>\n                  </td>\n                </tr>\n              </tbody>\n            </table>\n          </td>\n        </tr>\n      </tbody>\n    </table>`;\n\nconst candidate_subject = `Prioritized Developer Profile Intake [Ref: ${submissionId}]`;\n\nconst candidate_html = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"></head>\n<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #1e293b; margin: 0; padding: 24px; font-size: 15px; line-height: 1.65;\">\n  <div style=\"max-width: 620px; margin: 0 auto;\">\n    <p style=\"font-size: 16px; color: #0f172a; margin-bottom: 14px;\">\n      Hi <strong>${firstName}</strong>,\n    </p>\n    <p style=\"font-size: 14px; color: #334155; margin-bottom: 14px; line-height: 1.6;\">\n      Thank you for getting in touch and sharing your engineering profile and code showcase.\n    </p>\n    <p style=\"font-size: 14px; color: #334155; margin-bottom: 14px; line-height: 1.6;\">\n      Your developer profile for <strong>${category}</strong> has been saved to our engineering network [Ref: <code>${submissionId}</code>]. Because we actively partner with dedicated technical builders, your submission has been placed on our <strong>prioritized review track</strong>.\n    </p>\n    <p style=\"font-size: 14px; color: #334155; margin-bottom: 18px; line-height: 1.6;\">\n      I am personally reviewing your repository and code showcase alongside our current project bandwidth. If there is a direct mutual fit with our upcoming architectures, I will follow up with you on this thread with an initial technical perspective and next steps.\n    </p>\n\n    <div style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 8px; padding: 14px 18px; margin: 20px 0;\">\n      <div style=\"font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; margin-bottom: 8px;\">Logged Candidate Scope</div>\n      <table style=\"width: 100%; border-collapse: collapse; font-size: 13px; color: #334155;\">\n        <tr><td style=\"padding: 3px 0; color: #64748b; width: 28%; font-weight: 600;\">Domain:</td><td style=\"padding: 3px 0; font-weight: 600; color: #0f172a;\">${category}</td></tr>\n        <tr><td style=\"padding: 3px 0; color: #64748b; font-weight: 600;\">Experience:</td><td style=\"padding: 3px 0;\">${organization}</td></tr>\n        <tr><td style=\"padding: 3px 0; color: #64748b; font-weight: 600;\">Repository:</td><td style=\"padding: 3px 0;\"><a href=\"${githubUrl}\" style=\"color: #0284c7; text-decoration: none;\" target=\"_blank\">${githubUrl}</a></td></tr>\n        <tr><td style=\"padding: 3px 0; color: #64748b; font-weight: 600;\">Portfolio:</td><td style=\"padding: 3px 0;\">${portfolioUrl}</td></tr>\n      </table>\n      <div style=\"margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; font-size: 12px; color: #475569; font-style: italic;\">\n        \"${scope}\"\n      </div>\n    </div>\n\n    <p style=\"font-size: 13px; color: #475569; margin-bottom: 20px;\">\n      In the meantime, feel free to explore our open-source agent blueprints and evaluation harnesses on GitHub:<br/>\n      <a href=\"https://github.com/Amz34\" style=\"color: #0284c7; font-weight: 600; text-decoration: none;\" target=\"_blank\">&rarr; github.com/Amz34</a>\n    </p>\n\n    <p style=\"font-size: 14px; color: #0f172a; margin-bottom: 18px;\">\n      Best regards,<br/>\n      <strong>Aamir Malik Zameer</strong>\n    </p>\n    ${sigHtml}\n  </div>\n</body></html>`;\n\nconst admin_subject = `🎯 [DEV CANDIDATE] ${category} · ${name}`;\nconst admin_html = `<!DOCTYPE html>\n<html>\n<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; color: #f8fafc; padding: 24px;\">\n  <div style=\"max-width: 620px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 24px; border: 1px solid #334155;\">\n    <h2 style=\"color: #38bdf8; margin: 0 0 12px; font-size: 20px;\">Incoming Developer Requisition Profile</h2>\n    <p style=\"margin: 0 0 16px; color: #94a3b8; font-size: 14px;\">Reference: <strong>${submissionId}</strong> &bull; Priority Candidate Track</p>\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px; color: #e2e8f0; margin-bottom: 20px;\">\n      <tr><td style=\"padding: 6px 0; color: #94a3b8; width: 30%;\">Name:</td><td style=\"font-weight: 700;\">${name}</td></tr>\n      <tr><td style=\"padding: 6px 0; color: #94a3b8;\">Email:</td><td><a href=\"mailto:${email}\" style=\"color: #38bdf8;\">${email}</a></td></tr>\n      <tr><td style=\"padding: 6px 0; color: #94a3b8;\">Category:</td><td>${category}</td></tr>\n      <tr><td style=\"padding: 6px 0; color: #94a3b8;\">Level:</td><td>${organization}</td></tr>\n      <tr><td style=\"padding: 6px 0; color: #94a3b8;\">GitHub:</td><td><a href=\"${githubUrl}\" style=\"color: #38bdf8;\" target=\"_blank\">${githubUrl}</a></td></tr>\n      <tr><td style=\"padding: 6px 0; color: #94a3b8;\">Portfolio:</td><td>${portfolioUrl}</td></tr>\n      <tr><td style=\"padding: 6px 0; color: #94a3b8;\">Scope:</td><td>${scope}</td></tr>\n    </table>\n    <a href=\"mailto:${email}?subject=Re:%20Engineering%20Requisition%20Collaboration%20[${submissionId}]\" style=\"display: inline-block; background: #0284c7; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; font-size: 14px;\">\n      ✉️ 1-Click Reply to Candidate\n    </a>\n  </div>\n</body></html>`;\n\nreturn [{\n  json: {\n    submissionId,\n    name,\n    firstName,\n    category,\n    organization,\n    email,\n    githubUrl,\n    portfolioUrl,\n    scope,\n    telegram_msg,\n    admin_subject,\n    admin_html,\n    candidate_subject,\n    candidate_html,\n    received_at\n  }\n}];\n"
+      },
+      "id": "code-dev-validate-02",
+      "name": "Sanitize & Format Candidate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"submissionId\": \"{{ $json.submissionId }}\",\n  \"message\": \"Candidate profile received. Registered on AZ Senior FDE priority review track.\",\n  \"github_profile\": \"https://github.com/Amz34\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "resp-dev-webhook-04",
+      "name": "Render Success Screen",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8843884232",
+        "text": "={{ $json.telegram_msg }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "tg-dev-notify-03",
+      "name": "Push Alert @AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        280
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "9YItpAhgucvUK8zd",
+          "name": "Telegram AzGem_Bot Account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "azengineeringapp@gmail.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.candidate_subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.candidate_html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "azengineeringapp@gmail.com"
+        }
+      },
+      "id": "email-dev-candidate-05",
+      "name": "Dispatch Candidate Confirmation SLA",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        760,
+        560
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "MDLBD1X7InXcphaO",
+          "name": "Gmail SMTP azengineeringapp"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook: Dev Talent Intake": {
+      "main": [
+        [
+          {
+            "node": "Sanitize & Format Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize & Format Candidate": {
+      "main": [
+        [
+          {
+            "node": "Render Success Screen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Push Alert @AzGem_Bot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Dispatch Candidate Confirmation SLA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "16f208e0-ce14-4638-968e-b34fd5354c3a",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-11-27T00:18:45.526Z",
+      "createdAt": "2026-11-27T00:18:45.526Z",
+      "role": "workflow:owner",
+      "workflowId": "TaD3F1EuPapcJBlc",
+      "projectId": "tLOuyM69uiCbf8RD",
+      "project": {
+        "updatedAt": "2026-11-27T00:13:52.763Z",
+        "createdAt": "2026-11-27T00:13:52.763Z",
+        "id": "tLOuyM69uiCbf8RD",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "feaca950-8715-46df-9353-30f66eda744d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "updatedAt": "2026-11-25T08:20:06.134Z",
+  "createdAt": "2026-11-25T08:20:06.134Z",
+  "id": "WJD5j6p7KFE3pkJb",
+  "name": "MIT Megaproject Lead & MkDocs Fulfillment Mesh",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mit-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh-mit-lead-01",
+      "name": "Webhook: MIT Lead Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        240
+      ],
+      "webhookId": "wh-mit-lead-prod-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sanitize, validate and normalize lead payload\nconst item = $input.first().json;\nconst body = item.body || item;\n\nconst rawEmail = String(body.email || '').trim().toLowerCase();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n\nif (!rawEmail || !emailRegex.test(rawEmail)) {\n  throw new Error('Validation Failed: Invalid corporate email address (' + rawEmail + ')');\n}\n\nconst rawName = String(body.name || 'Corporate Partner').trim();\nconst cleanName = rawName.replace(/[^a-zA-Z\\s\\.-]/g, '').slice(0, 80);\nconst company = String(body.company || 'Enterprise Partner').slice(0, 100).trim();\nconst role = String(body.role || 'Executive').slice(0, 60).trim();\n\nreturn [{\n  json: {\n    name: cleanName || 'Corporate Partner',\n    email: rawEmail,\n    company: company,\n    role: role,\n    ref: String(body.ref || 'li_mit').trim(),\n    received_at: new Date().toISOString(),\n    telegram_msg: '🎯 *New MIT Corporate Lead Captured!*\\n\\n' +\n      '👤 *Name:* ' + (cleanName || 'Corporate Partner') + '\\n' +\n      '📧 *Email:* `' + rawEmail + '`\\n' +\n      '🏢 *Company:* ' + company + '\\n' +\n      '💼 *Role:* ' + role + '\\n' +\n      '🕒 *Time:* ' + new Date().toISOString() + '\\n\\n' +\n      '⚡ *Fulfillment:* MkDocs Documentation link dispatched to user.\\n' +\n      '🔗 *Portal:* https://amz34.github.io/projects-market'\n  }\n}];"
+      },
+      "id": "code-validate-02",
+      "name": "Validate & Sanitize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8843884232",
+        "text": "={{ $json.telegram_msg }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "tg-notify-03",
+      "name": "Notify Telegram @AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        240
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "9YItpAhgucvUK8zd",
+          "name": "Telegram AzGem_Bot Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Corporate token verified. Strategic documentation link dispatched.\",\n  \"portal_url\": \"https://amz34.github.io/projects-market\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "resp-webhook-04",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: MIT Lead Intake": {
+      "main": [
+        [
+          {
+            "node": "Validate & Sanitize Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Sanitize Lead": {
+      "main": [
+        [
+          {
+            "node": "Notify Telegram @AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Telegram @AzGem_Bot": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "1ae4b11b-5a33-44b3-b748-31d4b0a1d59d",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-11-27T00:18:45.526Z",
+      "createdAt": "2026-11-27T00:18:45.526Z",
+      "role": "workflow:owner",
+      "workflowId": "WJD5j6p7KFE3pkJb",
+      "projectId": "tLOuyM69uiCbf8RD",
+      "project": {
+        "updatedAt": "2026-11-27T00:13:52.763Z",
+        "createdAt": "2026-11-27T00:13:52.763Z",
+        "id": "tLOuyM69uiCbf8RD",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "feaca950-8715-46df-9353-30f66eda744d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

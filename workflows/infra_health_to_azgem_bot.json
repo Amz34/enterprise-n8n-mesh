@@ -1,0 +1,75 @@
+{
+  "name": "Infra Health Watchdog to Telegram AzGem_Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Every 6 Hours Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:5678/healthz",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Check n8n Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "",
+        "text": "=🟢 *Infra Sentinel Alert*\nn8n automation & internal stack is fully operational on Oracle ARM64 host.\nStatus: {{ $json.status }}\nTimestamp: {{ $now.toISO() }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "3",
+      "name": "Send to AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours Schedule": {
+      "main": [
+        [
+          {
+            "node": "Check n8n Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check n8n Health": {
+      "main": [
+        [
+          {
+            "node": "Send to AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

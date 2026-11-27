@@ -1,0 +1,138 @@
+{
+  "updatedAt": "2026-11-14T09:01:50.844Z",
+  "createdAt": "2026-11-05T14:05:58.807Z",
+  "id": "aJHalvb2K5lmDxmt",
+  "name": "EspoCRM Lead Ingestion & Telegram Notifier",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-ingest",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Incoming Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "lead-ingest-hook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://stack-crm/api/v1/Lead",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"firstName\": \"{{ $json.body.firstName }}\",\n  \"lastName\": \"{{ $json.body.lastName }}\",\n  \"emailAddress\": \"{{ $json.body.email }}\",\n  \"description\": \"{{ $json.body.notes || 'Ingested via n8n automated bridge' }}\"\n}",
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth"
+      },
+      "id": "2",
+      "name": "Create Lead in EspoCRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "HARmjWbB4VY97SCE",
+          "name": "EspoCRM Local Admin Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8843884232",
+        "text": "=🎯 *New Lead Ingested into EspoCRM*\n*Name*: {{ $('Incoming Lead Webhook').item.json.body.firstName }} {{ $('Incoming Lead Webhook').item.json.body.lastName }}\n*Email*: {{ $('Incoming Lead Webhook').item.json.body.email }}\n*Lead ID*: {{ $json.id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "3",
+      "name": "Notify @AzGem_Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "9YItpAhgucvUK8zd",
+          "name": "Telegram AzGem_Bot Account"
+        }
+      },
+      "webhookId": "1b86980d-256f-4ffc-9a25-cb1821415d77"
+    }
+  ],
+  "connections": {
+    "Incoming Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create Lead in EspoCRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead in EspoCRM": {
+      "main": [
+        [
+          {
+            "node": "Notify @AzGem_Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "4888632a-7747-416d-8756-51949677192a",
+  "activeVersionId": null,
+  "versionCounter": 3,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-11-27T00:18:45.526Z",
+      "createdAt": "2026-11-27T00:18:45.526Z",
+      "role": "workflow:owner",
+      "workflowId": "aJHalvb2K5lmDxmt",
+      "projectId": "tLOuyM69uiCbf8RD",
+      "project": {
+        "updatedAt": "2026-11-27T00:13:52.763Z",
+        "createdAt": "2026-11-27T00:13:52.763Z",
+        "id": "tLOuyM69uiCbf8RD",
+        "name": "Unnamed Project",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "feaca950-8715-46df-9353-30f66eda744d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
