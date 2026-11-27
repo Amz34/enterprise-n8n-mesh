@@ -1,5 +1,7 @@
 # Enterprise n8n Mesh (Production Architecture)
 
+![Enterprise n8n Mesh Topology](docs/assets/enterprise_production_mesh_topology.png)
+
 An enterprise-grade, high-availability workflow automation architecture running **n8n in Queue Mode** with **PostgreSQL 16**, **Redis 7 (BullMQ)**, decoupled worker fleets, dynamic auto-boosting fleet autoscaling, TLS edge termination, and automated SRE observability.
 
 ---
